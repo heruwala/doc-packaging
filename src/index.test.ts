@@ -1,4 +1,4 @@
-import { add } from './index';
+import { documentPackage } from './index';
 
 // Unit test for the following functions, a frankenstein test:
 // get last runtime (assert the timestamp is equal to the current time - 1 hour)
@@ -12,8 +12,8 @@ import { add } from './index';
 // send message to the queue
 // update the blob storage with TransmissionStatus of "Transmitted"
 
-describe('add', () => {
-    it('given numbers a and b, return a + b', () => {
-        expect(add(1, 2)).toBe(3);
+describe('document package', () => {
+    it('given all the methods, return success', () => {
+        expect(documentPackage()).toBe(true);
     });
 });
