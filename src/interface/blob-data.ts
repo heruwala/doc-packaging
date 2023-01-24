@@ -1,4 +1,4 @@
-interface BlobList {
+interface BlobData {
     fileName: string;
     lastModified: Date;
     createDate: Date;
