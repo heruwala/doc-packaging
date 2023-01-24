@@ -1,7 +1,8 @@
 // get cases with LastUploadDate between current and last runtime, and (TranscriptTransError = false or PhotoTransError = false) from an API
 
-export function getCases(currentTime: Date, lastRuntime: Date) {
-    return [
+export function getCases(currentTime: Date, lastRuntime: Date): CaseData[] {
+    let cases: CaseData[] = 
+    [
         {
             caseId: '123',
             lastUploadDate: 1590000000000,
@@ -15,4 +16,5 @@ export function getCases(currentTime: Date, lastRuntime: Date) {
             photoTransError: false
         }
     ];
+    return cases;
 }

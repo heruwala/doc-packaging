@@ -3,7 +3,7 @@ import 'dotenv/config';
 
 // for given caseId get the list of files from blob storage
 // TODO: replace with a call to an API
-function getBlobList(caseId: string) {
+function getBlobList(caseId: string): BlobData[] {
     let blobList: BlobData[] = [
         {
             fileName: '123.pdf',
