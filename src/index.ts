@@ -9,16 +9,17 @@
 // create a message to send to the queue
 // send message to the queue
 // update the blob storage with TransmissionStatus of "Transmitted"
+// set the last runtime to the current time
 
 import blobUtils from './blob';
 import { getCases } from './case';
-import { getLastRuntime } from './last-runtime';
+import runtimeUtils  from './last-runtime';
 
 export function documentPackage() {
     let success = false;
     try {
-        const lastRuntime = getLastRuntime();
-        const currentTime = Date.now();
+        const lastRuntime = runtimeUtils.getLastRuntime();
+        const currentTime: Date = new Date();
         const cases = getCases(currentTime, lastRuntime);
         // for a given case download files from blob storage having TransmissionStatus of "Pending" and CreateDate < current runtime
         cases.forEach((caseItem) => {
@@ -37,9 +38,11 @@ export function documentPackage() {
                         // create a message to send to the queue
                         // send message to the queue
                         // update the blob storage with TransmissionStatus of "Transmitted"
+                        // setLastRuntime(currentTime);
                     });
                 }
             } catch (error) {
+                // Log error and move on to the next case
                 console.log(error);
             }
         });

@@ -4,29 +4,36 @@ import 'dotenv/config';
 // for given caseId get the list of files from blob storage
 // TODO: replace with a call to an API
 function getBlobList(caseId: string) {
-    return [
+    let blobList: BlobList[] = [
         {
             fileName: '123.pdf',
             docType: 'transcript',
             caseId: '123',
-            createDate: 1590000000000,
+            createDate: new Date('2023-01-24T18:29:12.621Z'),
             transmissionStatus: 'Pending',
+            lastModified: new Date('2023-01-24T18:29:12.621Z'),
+            contentType: 'application/pdf'
         },
         {
             fileName: '456.pdf',
             docType: 'transcript',
             caseId: '123',
-            createDate: 1590000000000,
+            createDate: new Date('2023-01-24T18:29:12.621Z'),
             transmissionStatus: 'Pending',
+            lastModified: new Date('2023-01-24T18:29:12.621Z'),
+            contentType: 'application/pdf'
         },
         {
             fileName: '789.pdf',
             docType: 'photo',
             caseId: '123',
-            createDate: 1590000000000,
+            createDate: new Date('2023-01-24T18:29:12.621Z'),
             transmissionStatus: 'Pending',
-        },
-    ];
+            lastModified: new Date('2023-01-24T18:29:12.621Z'),
+            contentType: 'application/pdf'
+        }
+    ]
+    return blobList;
 }
 
 // download blob files from azure blob storage based on input fileNames parameter and return a list of streams

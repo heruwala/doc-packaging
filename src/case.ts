@@ -1,6 +1,6 @@
 // get cases with LastUploadDate between current and last runtime, and (TranscriptTransError = false or PhotoTransError = false) from an API
 
-export function getCases(currentTime: number, lastRuntime: number) {
+export function getCases(currentTime: Date, lastRuntime: Date) {
     return [
         {
             caseId: '123',

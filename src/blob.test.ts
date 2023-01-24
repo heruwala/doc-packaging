@@ -5,23 +5,29 @@ describe ('blob', () => {
         expect(blobUtils.getBlobList('123')).toEqual([
             {
                 fileName: '123.pdf',
+                contentType: 'application/pdf',
                 docType: 'transcript',
                 caseId: '123',
-                createDate: 1590000000000,
+                createDate: new Date('2023-01-24T18:29:12.621Z'),
+                lastModified: new Date('2023-01-24T18:29:12.621Z'),
                 transmissionStatus: 'Pending'
             },
             {
                 fileName: '456.pdf',
+                contentType: 'application/pdf',
                 docType: 'transcript',
                 caseId: '123',
-                createDate: 1590000000000,
+                createDate: new Date('2023-01-24T18:29:12.621Z'),
+                lastModified: new Date('2023-01-24T18:29:12.621Z'),
                 transmissionStatus: 'Pending'
             },
             {
                 fileName: '789.pdf',
+                contentType: 'application/pdf',
                 docType: 'photo',
                 caseId: '123',
-                createDate: 1590000000000,
+                createDate: new Date('2023-01-24T18:29:12.621Z'),
+                lastModified: new Date('2023-01-24T18:29:12.621Z'),
                 transmissionStatus: 'Pending'
             }
         ]);

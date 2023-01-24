@@ -11,6 +11,7 @@ import { documentPackage } from './index';
 // create a message to send to the queue
 // send message to the queue
 // update the blob storage with TransmissionStatus of "Transmitted"
+// set the last runtime to the current time
 
 describe('document package', () => {
     it('given all the methods, return success', () => {
