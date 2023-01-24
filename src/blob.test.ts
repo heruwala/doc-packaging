@@ -22,8 +22,8 @@ describe ('blob', () => {
                 transmissionStatus: 'Pending'
             },
             {
-                fileName: '789.pdf',
-                contentType: 'application/pdf',
+                fileName: '789.jpeg',
+                contentType: 'image/jpeg',
                 docType: 'photo',
                 caseId: '123',
                 createDate: new Date('2023-01-24T18:29:12.621Z'),
@@ -34,7 +34,7 @@ describe ('blob', () => {
     });
 
     it ('given fileNames, return list of streams', () => {
-        blobUtils.downloadBlobFiles(['123.pdf', '456.pdf', '789.pdf'])
+        blobUtils.downloadBlobFiles(['123.pdf', '456.pdf', '789.jpeg'])
           .then((streams) => {
             expect(streams[0].stream).not.toBeUndefined();
         });

@@ -24,13 +24,13 @@ function getBlobList(caseId: string): BlobData[] {
             contentType: 'application/pdf'
         },
         {
-            fileName: '789.pdf',
+            fileName: '789.jpeg',
             docType: 'photo',
             caseId: '123',
             createDate: new Date('2023-01-24T18:29:12.621Z'),
             transmissionStatus: 'Pending',
             lastModified: new Date('2023-01-24T18:29:12.621Z'),
-            contentType: 'application/pdf'
+            contentType: 'image/jpeg'
         }
     ]
     return blobList;

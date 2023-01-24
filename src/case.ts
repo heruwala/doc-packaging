@@ -4,14 +4,14 @@ export function getCases(currentTime: Date, lastRuntime: Date): CaseData[] {
     let cases: CaseData[] = 
     [
         {
-            caseId: '123',
-            lastUploadDate: 1590000000000,
+            caseId: 'C123',
+            lastUploadDate: new Date('2023-01-24T18:29:12.621Z'),
             transcriptTransError: false,
             photoTransError: false            
         },
         {
-            caseId: '456',
-            lastUploadDate: 1590000000000,
+            caseId: 'C456',
+            lastUploadDate: new Date('2023-01-24T18:30:12.621Z'),
             transcriptTransError: false,
             photoTransError: false
         }

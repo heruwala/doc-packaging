@@ -1,6 +1,6 @@
 interface CaseData {
     caseId: string;
-    lastUploadDate: number;
+    lastUploadDate: Date;
     transcriptTransError: boolean;
     photoTransError: boolean;
 }
