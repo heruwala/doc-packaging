@@ -5,12 +5,16 @@ export function getCases(currentTime: Date, lastRuntime: Date): CaseData[] {
     [
         {
             caseId: 'C123',
+            applicationId: '2023463931',
+            seasonId: '2023',
             lastUploadDate: new Date('2023-01-24T18:29:12.621Z'),
             transcriptTransError: false,
             photoTransError: false            
         },
         {
             caseId: 'C456',
+            applicationId: '2023463932',
+            seasonId: '2023',
             lastUploadDate: new Date('2023-01-24T18:30:12.621Z'),
             transcriptTransError: false,
             photoTransError: false

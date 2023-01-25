@@ -7,8 +7,9 @@ function getBlobList(caseId: string): BlobData[] {
     let blobList: BlobData[] = [
         {
             fileName: '123.pdf',
-            docType: 'transcript',
+            docType: 'MSXSCRIPT',
             caseId: '123',
+            documentId: 'D123',
             createDate: new Date('2023-01-24T18:29:12.621Z'),
             transmissionStatus: 'Pending',
             lastModified: new Date('2023-01-24T18:29:12.621Z'),
@@ -16,8 +17,9 @@ function getBlobList(caseId: string): BlobData[] {
         },
         {
             fileName: '456.pdf',
-            docType: 'transcript',
+            docType: 'MSPE',
             caseId: '123',
+            documentId: 'D456',
             createDate: new Date('2023-01-24T18:29:12.621Z'),
             transmissionStatus: 'Pending',
             lastModified: new Date('2023-01-24T18:29:12.621Z'),
@@ -25,8 +27,9 @@ function getBlobList(caseId: string): BlobData[] {
         },
         {
             fileName: '789.jpeg',
-            docType: 'photo',
+            docType: 'PHOTO',
             caseId: '123',
+            documentId: 'D789',
             createDate: new Date('2023-01-24T18:29:12.621Z'),
             transmissionStatus: 'Pending',
             lastModified: new Date('2023-01-24T18:29:12.621Z'),
@@ -37,11 +40,9 @@ function getBlobList(caseId: string): BlobData[] {
 }
 
 // download blob files from azure blob storage based on input fileNames parameter and return a list of streams
-async function downloadBlobFiles(fileNames: string[]) {
-    //const streams: { fileName: string; stream: NodeJS.ReadableStream | undefined; }[] = [];
-    //let streams: { fileName: string; stream: any; }[] = [];
-    let streams: any[] = [];
-    for (let file of fileNames) {
+async function downloadBlobFiles(blobs: BlobData[]) {
+    let streams: BlobData[] = [];
+    for (let file of blobs) {
         const blobStorageConnection = 'BLOB_CONNECTION_STRING';
         const containerName = process.env['BLOB_CONTAINER_NAME'] || '';
         const connectionString = process.env[blobStorageConnection];
@@ -54,19 +55,26 @@ async function downloadBlobFiles(fileNames: string[]) {
         // download file from blob storage
         let blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
         let containerClient = blobServiceClient.getContainerClient(containerName);
-        let blobClient = containerClient.getBlobClient(file);
+        let blobClient = containerClient.getBlobClient(file.fileName);
 
         const downloadBlockBlobResponse = await blobClient.download();
 
         if (!downloadBlockBlobResponse) {
-            throw new Error(`Unable to download file, ${file} from container, ${containerName}`);
+            throw new Error(`Unable to download file, ${file.fileName} from container, ${containerName}`);
         }
 
         const downloadStream = await streamToBuffer(downloadBlockBlobResponse.readableStreamBody);
 
         streams.push({
-            fileName: file,
-            stream: downloadStream,
+            docType: file.docType,
+            fileName: file.fileName,
+            caseId: file.caseId,
+            documentId: file.documentId,
+            createDate: file.createDate,
+            transmissionStatus: file.transmissionStatus,
+            lastModified: file.lastModified,
+            contentType: file.contentType,            
+            fileContent: downloadStream,
         });
     };
     return streams;

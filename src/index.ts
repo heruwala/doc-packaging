@@ -14,6 +14,7 @@
 import blobUtils from './blob';
 import { getCases } from './case';
 import runtimeUtils  from './last-runtime';
+import manifest from './manifest';
 
 export function documentPackage() {
     let success = false;
@@ -27,11 +28,16 @@ export function documentPackage() {
             try {
                 if (blobList.length > 0) {
                     blobList.forEach((blobItem) => {
-                        const fileNames = blobList
+                        const blobs = blobList
                             .filter((blobItem) => blobItem.transmissionStatus === 'Pending' && blobItem.createDate < currentTime)
-                            .map((blobItem) => blobItem.fileName);
-                        const streams = blobUtils.downloadBlobFiles(fileNames);
-                        // Create a manifest file
+                            .map((blobItem) => blobItem);
+                        const documents = blobUtils.downloadBlobFiles(blobs);
+                        const dateTime = new Date();
+                        const zipFileName = `${caseItem.caseId}_EFDO_${dateTime.toISOString()}.zip`;
+                        const zipFileCreateDateTime = dateTime;
+                        const applicationId = caseItem.applicationId;
+                        const seasonId = caseItem.seasonId;
+                        const manifestFile = manifest.createManifestFile(zipFileName, zipFileCreateDateTime, applicationId, seasonId);
                         // stream merging pdf (annotating pdf)
                         // stream zipping
                         // upload zip file to blob storage along with metadata of included fileNames, their docType, caseId, and CreateDate
