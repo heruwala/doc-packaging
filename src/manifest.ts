@@ -1,44 +1,20 @@
 import * as xml2js from "xml2js";
 
-function generateManifest(zipFileName: string, zipFileCreateDateTime: string, applicationId: string, seasonId: string): string {
-
+function createManifestFile(zipFileName: string, zipFileCreateDateTime: Date, applicationId: string, seasonId: string, blobDocuments: BlobData[]): Buffer {
     const documents = {
-        Document: [
-            {
-                DocumentType: 'MSPE',
-                DocumentId: "6968504",
-                FileName: "21147862_EFDO_MSPE.pdf",
-                FileReceivedDateTime: "2022-05-19T14:02:48"
-            },
-            {
-                DocumentType: 'MSXSCRIPT',
-                DocumentId: "6968506",
-                FileName: "21147862_EFDO_TRANSCRIPT.pdf",
-                FileReceivedDateTime: "2022-05-19T14:04:57"
-            },
-            {
-                DocumentType: 'ABSITE',
-                DocumentId: "6968508",
-                FileName: "21147862_EFDO_ABSITE.pdf",
-                FileReceivedDateTime: "2022-05-19T14:13:45"
+        Document: blobDocuments.map((blobDocument) => {
+            return {
+                DocumentType: blobDocument.documentType,
+                DocumentId: blobDocument.documentId,
+                FileName: blobDocument.documentName,
+                FileReceivedDateTime: blobDocument.createdAt.toISOString()
             }
-        ] as Document[]
+        })
     };
-
-    const manifest = new ManifestClass(zipFileName, zipFileCreateDateTime, applicationId, seasonId, documents);
-
-    // initialize builder with root node name Manifest and namespace = "http://www.aamc.org/schemas/eras/file-exchange"
-    const builder = new xml2js.Builder({
-        rootName: 'Manifest'
-    });
-    const xml = builder.buildObject(manifest);
-    return xml;
-}
-
-function createManifestFile(zipFileName: string, zipFileCreateDateTime: Date, applicationId: string, seasonId: string): Buffer {
-    const manifest = generateManifest(zipFileName, zipFileCreateDateTime.toISOString(), applicationId, seasonId);
-    const file = Buffer.from(manifest, 'utf-8');
-    return file;
+    
+    const manifest = new ManifestClass(zipFileName, zipFileCreateDateTime.toISOString(), applicationId, seasonId, documents);
+    const manifestFile = manifest.generateManifestDocument();
+    return manifestFile;
 }
 
 class ManifestClass implements Manifest {
@@ -48,9 +24,10 @@ class ManifestClass implements Manifest {
     ApplicationId: string;
     SeasonId: string;
     Documents: {
-        Document: Document[];
+        Document: IManifestDocumentMetadata[];
     }
-    constructor(zipFileName: string, zipFileCreateDateTime: string, applicationId: string, seasonId: string, documents: { Document: Document[] }) {
+
+    constructor(zipFileName: string, zipFileCreateDateTime: string, applicationId: string, seasonId: string, documents: { Document: IManifestDocumentMetadata[] }) {
         this.ZipFileName = zipFileName;
         this.ZipFileCreateDateTime = zipFileCreateDateTime;
         this.SourceOrganization = "EFDO";
@@ -58,6 +35,32 @@ class ManifestClass implements Manifest {
         this.SeasonId = seasonId;
         this.Documents = documents;
     }
+
+    addHeader(zipFileName: string, zipFileCreateDateTime: Date, applicationId: string, seasonId: string) {
+        this.ZipFileName = zipFileName;
+        this.ZipFileCreateDateTime = zipFileCreateDateTime.toISOString();
+        this.SourceOrganization = 'EFDO';
+        this.ApplicationId = applicationId;
+        this.SeasonId = seasonId;
+    }
+    
+    addDocument(document: IManifestDocumentMetadata) {
+        this.Documents.Document.push(document);
+    }
+
+    generateManifestXml(): string {
+        const builder = new xml2js.Builder({
+            rootName: 'Manifest'
+        });
+        const xml = builder.buildObject(this);
+        return xml;
+    }
+
+    generateManifestDocument(): Buffer {
+        const xml = this.generateManifestXml();
+        const file = Buffer.from(xml, 'utf-8');
+        return file;
+    }
 }
 
-export default { generateManifest, createManifestFile };
+export default { createManifestFile };

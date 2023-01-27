@@ -5,13 +5,13 @@ interface Manifest {
     ApplicationId: string;
     SeasonId: string;
     Documents: {
-        Document: Document[];
+        Document: IManifestDocumentMetadata[];
     }
 }
 
-interface Document {
+interface IManifestDocumentMetadata {
     DocumentType: DocumentType;
     DocumentId: string;
-    FileName: string;
+    FileName: string | undefined;
     FileReceivedDateTime: string;
 }

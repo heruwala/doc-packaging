@@ -1,18 +1,19 @@
 interface BlobData {
-    fileName: string;
-    lastModified: Date;
-    createDate: Date;
+    documentName: string | undefined;
+    lastModifiedAt: Date;
+    createdAt: Date;
     documentId: string;
-    docType: DocumentType;
-    contentType: string;
+    documentType: DocumentType;
+    contentType: string | undefined;
     transmissionStatus: string;
     caseId: string;
-    fileContent?: any;
+    documentContent?: any;
 }
 
 const MSPE = 'MSPE' as const;
 const MSXSCRIPT = 'MSXSCRIPT' as const;
 const ABSITE = 'ABSITE' as const;
+const PTAL = 'PTAL' as const;
 const PHOTO = 'PHOTO' as const;
 
-type DocumentType = typeof MSPE | typeof MSXSCRIPT | typeof ABSITE | typeof PHOTO;
+type DocumentType = typeof MSPE | typeof MSXSCRIPT | typeof ABSITE | typeof PTAL | typeof PHOTO;
