@@ -6,7 +6,15 @@ interface Manifest {
     SeasonId: string;
     Documents: {
         Document: IManifestDocumentMetadata[];
-    }
+    };
+}
+
+interface IManifestHeader {
+    ZipFileName: string;
+    ZipFileCreateDateTime: string;
+    SourceOrganization: string;
+    ApplicationId: string;
+    SeasonId: string;
 }
 
 interface IManifestDocumentMetadata {

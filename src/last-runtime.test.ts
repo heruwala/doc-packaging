@@ -1,4 +1,4 @@
-import runtimeUtils  from './last-runtime';
+import runtimeUtils from './last-runtime';
 
 // get last runtime (assert the timestamp is greater than 1 hour from the current time)
 describe('LastRuntime', () => {

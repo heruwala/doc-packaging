@@ -5,8 +5,8 @@ import { documentPackage } from './index';
 // get cases with LastUploadDate between current and last runtime, and (TranscriptTransError = false or PhotoTransError = false) from an API
 // for a given case download files from blob storage having TransmissionStatus of "pending" and CreateDate < current runtime
 // Create a manifest file
-// stream merging pdf (annotating pdf)
-// stream zipping
+// annotate pdf only for MIDUS pdf
+// zip documents and manifest XML
 // upload zip file to blob storage along with metadata of included fileNames, their docType, caseId, and CreateDate
 // create a message to send to the queue
 // send message to the queue

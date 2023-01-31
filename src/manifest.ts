@@ -1,18 +1,26 @@
-import * as xml2js from "xml2js";
+import * as xml2js from 'xml2js';
 
 function createManifestFile(zipFileName: string, zipFileCreateDateTime: Date, applicationId: string, seasonId: string, blobDocuments: BlobData[]): Buffer {
+    const manifestHeader = {
+        ZipFileName: zipFileName,
+        ZipFileCreateDateTime: zipFileCreateDateTime.toISOString(),
+        SourceOrganization: 'EFDO',
+        ApplicationId: applicationId,
+        SeasonId: seasonId,
+    };
+
     const documents = {
         Document: blobDocuments.map((blobDocument) => {
             return {
                 DocumentType: blobDocument.documentType,
                 DocumentId: blobDocument.documentId,
                 FileName: blobDocument.documentName,
-                FileReceivedDateTime: blobDocument.createdAt.toISOString()
-            }
-        })
+                FileReceivedDateTime: blobDocument.createdAt.toISOString(),
+            };
+        }),
     };
-    
-    const manifest = new ManifestClass(zipFileName, zipFileCreateDateTime.toISOString(), applicationId, seasonId, documents);
+
+    const manifest = new ManifestClass(manifestHeader, documents);
     const manifestFile = manifest.generateManifestDocument();
     return manifestFile;
 }
@@ -25,14 +33,14 @@ class ManifestClass implements Manifest {
     SeasonId: string;
     Documents: {
         Document: IManifestDocumentMetadata[];
-    }
+    };
 
-    constructor(zipFileName: string, zipFileCreateDateTime: string, applicationId: string, seasonId: string, documents: { Document: IManifestDocumentMetadata[] }) {
-        this.ZipFileName = zipFileName;
-        this.ZipFileCreateDateTime = zipFileCreateDateTime;
-        this.SourceOrganization = "EFDO";
-        this.ApplicationId = applicationId;
-        this.SeasonId = seasonId;
+    constructor(manifestHeader: IManifestHeader, documents: { Document: IManifestDocumentMetadata[] }) {
+        this.ZipFileName = manifestHeader.ZipFileName;
+        this.ZipFileCreateDateTime = manifestHeader.ZipFileCreateDateTime;
+        this.SourceOrganization = 'EFDO';
+        this.ApplicationId = manifestHeader.ApplicationId;
+        this.SeasonId = manifestHeader.SeasonId;
         this.Documents = documents;
     }
 
@@ -43,14 +51,22 @@ class ManifestClass implements Manifest {
         this.ApplicationId = applicationId;
         this.SeasonId = seasonId;
     }
-    
+
+    addHeaderFromObject(manifestHeader: IManifestHeader) {
+        this.ZipFileName = manifestHeader.ZipFileName;
+        this.ZipFileCreateDateTime = manifestHeader.ZipFileCreateDateTime;
+        this.SourceOrganization = manifestHeader.SourceOrganization;
+        this.ApplicationId = manifestHeader.ApplicationId;
+        this.SeasonId = manifestHeader.SeasonId;
+    }
+
     addDocument(document: IManifestDocumentMetadata) {
         this.Documents.Document.push(document);
     }
 
     generateManifestXml(): string {
         const builder = new xml2js.Builder({
-            rootName: 'Manifest'
+            rootName: 'Manifest',
         });
         const xml = builder.buildObject(this);
         return xml;
