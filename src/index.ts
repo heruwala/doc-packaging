@@ -17,6 +17,7 @@ import { getCases } from './case';
 import runtimeUtils from './last-runtime';
 import manifest from './manifest';
 import { promises as fs } from 'fs';
+import { zipFiles } from './zip';
 
 export async function documentPackage() {
     let success = false;
@@ -36,18 +37,41 @@ export async function documentPackage() {
                     const zipCreationDateTime = new Date();
                     const zipFileName = `${caseItem.applicationId}_${zipCreationDateTime.toISOString().slice(0, -5).replace(/:/g, '')}.zip`;
                     manifestFile = manifest.createManifestFile(zipFileName, zipCreationDateTime, applicationId, seasonId, blobDocuments);
-                    // annotate pdf only for MIDUS pdf
-                    // foreach blob in blobDocuments, if content type is pdf and document source is MIDUS then annotate pdf and update blobList
-                    // TODO: identify the MIDUS pdf
                     for (let document of blobDocuments) {
-                        if (document.contentType === 'application/pdf') {
+                        if (document.contentType === 'application/pdf' && document.uploadedByType === 'midus') {
                             const annotatedPdfBuffer = await annotatePdfDocuments([miducCoverPage, document.documentContent]);
                             document.documentContent = annotatedPdfBuffer;
                         }
                     }
 
-                    // zip documents and manifest XML
-                    // upload zip file to blob storage along with metadata of included fileNames, their docType, caseId, and CreateDate
+                    const documentsToZip = blobDocuments.map((blobDocument) => {
+                        return {
+                            documentName: blobDocument.documentName,
+                            documentContent: blobDocument.documentContent,
+                        };
+                    });
+                    documentsToZip.push({
+                        documentName: 'manifest.xml',
+                        documentContent: manifestFile,
+                    });
+                    const zipFile = await zipFiles(documentsToZip);
+
+                    // for verification purpose, write zip file to disk
+                    //const zipFilePath = `./test/fixtures/${zipFileName}`;
+                    //await fs.writeFile(zipFilePath, zipFile);
+
+                    const tags: Record<string,string> = {
+                        applicationId: applicationId,
+                        seasonId: seasonId,
+                        caseId: caseItem.caseId,
+                    };
+
+                    const metadata: Record<string,string> = {
+                        files: JSON.stringify(blobDocuments.map((blobDocument) => blobDocument.documentName)),
+                    };
+
+                    const blobUploadResponse = await blobUtils.uploadBlobFile(zipFile, zipFileName, 'application/zip', tags, metadata);
+                     
                     // create a message to send to the queue
                     // send message to the queue
                     // update the blob storage with TransmissionStatus of "Transmitted"

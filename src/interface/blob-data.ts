@@ -6,6 +6,7 @@ interface BlobData {
     documentType: DocumentType;
     contentType: string | undefined;
     transmissionStatus: string;
+    uploadedByType: string;
     caseId: string;
     documentContent?: any;
 }
