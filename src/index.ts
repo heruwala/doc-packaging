@@ -12,12 +12,13 @@
 // set the last runtime to the current time
 
 import { annotatePdfDocuments } from './annotate';
-import blobUtils from './blob';
+import blobUtils, { BlobStorage } from './blob';
 import { getCases } from './case';
 import runtimeUtils from './last-runtime';
 import manifest from './manifest';
 import { promises as fs } from 'fs';
 import { zipFiles } from './zip';
+import { Readable } from "stream";
 
 export async function documentPackage() {
     let success = false;
@@ -25,18 +26,27 @@ export async function documentPackage() {
         const lastRuntime = runtimeUtils.getLastRuntime();
         const currentRunTime: Date = new Date();
         const cases = getCases(currentRunTime, lastRuntime);
+        const accountName = process.env['BLOB_ACCOUNT_NAME']!;
+        const accountKey = process.env['BLOB_ACCOUNT_KEY']!;
+        const containerName = process.env['BLOB_CONTAINER_NAME']!;
         for (const caseItem of cases) {
-            const applicationId = caseItem.applicationId;
+            const aamcApplicationId = caseItem.aamcApplicationId;
             const seasonId = caseItem.seasonId;
+            const caseId = caseItem.caseId;
             const miducCoverPage = await fs.readFile('./annotations/MIDUS Cover.pdf');
             let manifestFile: Buffer;
+            const blobStorage: BlobStorage = new BlobStorage(accountName, accountKey);
             try {
-                const blobList = await blobUtils.getBlobList(caseItem.caseId);
+                const searchCriteria =
+                    "@container = '" + containerName +
+                    "' AND caseId = '" + caseId +
+                    "' AND transmissionStatus = 'pending' AND createdDate < '" + currentRunTime.toISOString() + "'";
+                    const blobList = await blobStorage.findBlobsByTags(searchCriteria);
                 if (blobList.length > 0) {
                     const blobDocuments = await blobUtils.downloadBlobFiles(blobList);
                     const zipCreationDateTime = new Date();
-                    const zipFileName = `${caseItem.applicationId}_${zipCreationDateTime.toISOString().slice(0, -5).replace(/:/g, '')}.zip`;
-                    manifestFile = manifest.createManifestFile(zipFileName, zipCreationDateTime, applicationId, seasonId, blobDocuments);
+                    const zipFileName = `${aamcApplicationId}_${zipCreationDateTime.toISOString().slice(0, -5).replace(/:/g, '')}.zip`;
+                    manifestFile = manifest.createManifestFile(zipFileName, zipCreationDateTime, aamcApplicationId, seasonId, blobDocuments);
                     for (let document of blobDocuments) {
                         if (document.contentType === 'application/pdf' && document.uploadedByType === 'midus') {
                             const annotatedPdfBuffer = await annotatePdfDocuments([miducCoverPage, document.documentContent]);
@@ -60,18 +70,20 @@ export async function documentPackage() {
                     //const zipFilePath = `./test/fixtures/${zipFileName}`;
                     //await fs.writeFile(zipFilePath, zipFile);
 
-                    const tags: Record<string,string> = {
-                        applicationId: applicationId,
+                    const tags: Record<string, string> = {
+                        aamcApplicationId: aamcApplicationId,
                         seasonId: seasonId,
                         caseId: caseItem.caseId,
                     };
 
-                    const metadata: Record<string,string> = {
-                        files: JSON.stringify(blobDocuments.map((blobDocument) => blobDocument.documentName)),
+                    const metadata: Record<string, string> = {
+                        files: JSON.stringify(blobDocuments.map((blobDocument) => blobDocument.documentId)),
                     };
 
-                    const blobUploadResponse = await blobUtils.uploadBlobFile(zipFile, zipFileName, 'application/zip', tags, metadata);
-                     
+                    const zipFileReadableStream = bufferToReadable(zipFile);
+
+                    const blobUploadResponse = await blobStorage.writeStreamToBlob(zipFileName, containerName, zipFileReadableStream, 'application/zip', tags, metadata);
+
                     // create a message to send to the queue
                     // send message to the queue
                     // update the blob storage with TransmissionStatus of "Transmitted"
@@ -89,3 +101,11 @@ export async function documentPackage() {
     }
     return success;
 }
+
+// Temporary code, once integrated with the stream, this will be removed
+function bufferToReadable(buffer: Buffer): Readable {
+    const readable = new Readable();
+    readable.push(buffer);
+    readable.push(null);
+    return readable;
+  }

@@ -10,7 +10,7 @@ describe('getCases', () => {
         expect(getCases(currentTime, lastRuntime)).toEqual([
             {
                 caseId: 'C123',
-                applicationId: '2023463931',
+                aamcApplicationId: '2023463931',
                 seasonId: '2023',
                 lastUploadDate: new Date('2023-01-24T18:29:12.621Z'),
                 transcriptTransError: false,
@@ -18,7 +18,7 @@ describe('getCases', () => {
             },
             {
                 caseId: 'C456',
-                applicationId: '2023463932',
+                aamcApplicationId: '2023463932',
                 seasonId: '2023',
                 lastUploadDate: new Date('2023-01-24T18:30:12.621Z'),
                 transcriptTransError: false,

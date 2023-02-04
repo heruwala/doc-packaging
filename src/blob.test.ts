@@ -1,16 +1,23 @@
-import blobUtils, { BlobStorage } from './blob';
+import { BlobStorage } from './blob';
+import internal from 'stream';
 
 const performIntegrationTests = true;
 
 const accountName = !performIntegrationTests ? 'account-name' : process.env['BLOB_ACCOUNT_NAME']!;
 const accountKey = !performIntegrationTests ? 'account-key' : process.env['BLOB_ACCOUNT_KEY']!;
+const containerName = !performIntegrationTests ? 'container-name' : process.env['BLOB_CONTAINER_NAME']!;
 
 describe('blob', () => {
     let blobStorage: BlobStorage;
     beforeEach(() => (blobStorage = new BlobStorage(accountName, accountKey)));
 
     it('given caseId, return list of files from blob storage', async () => {
-        const blobs = await blobUtils.getBlobList('C123');
+        // arrange
+        const searchCriteria = "@container = '" + containerName + "' AND caseId = 'C123' AND transmissionStatus = 'pending' AND createdDate < '2023-02-02T00:00:00.000Z'";
+        
+        // act
+        const blobs = await blobStorage.findBlobsByTags(searchCriteria);
+        // assert
         expect(blobs).toEqual([
             {
                 caseId: 'C123',
@@ -50,16 +57,49 @@ describe('blob', () => {
 
     it('given tags, return list of files from blob storage', async () => {
         // arrange
-        const searchCriteria = "@container = 'season-2024' AND caseId = 'C123' AND transmissionStatus = 'pending' AND createdDate < '2023-02-02T00:00:00.000Z'";
+        const searchCriteria = "@container = '" + containerName + "' AND caseId = 'C123' AND transmissionStatus = 'pending' AND createdDate < '2023-02-02T00:00:00.000Z'";
         // act
         const blobs = await blobStorage.findBlobsByTags(searchCriteria);
         // assert
         expect(blobs.length).toBeGreaterThan(0);
     });
 
-    it('given fileNames, return list of streams', async () => {
-        blobUtils.downloadBlobFiles(await blobUtils.getBlobList('C123')).then((streams) => {
-            expect(streams[0].documentContent).not.toBeUndefined();
-        });
+    it('given wrong tags, return empty list of files from blob storage', async () => {
+        // arrange
+        const searchCriteria = "@container = '" + containerName + "' AND caseId = 'C456' AND transmissionStatus = 'pending' AND createdDate < '2023-02-02T00:00:00.000Z'";
+        // act
+        const blobs = await blobStorage.findBlobsByTags(searchCriteria);
+        // assert
+        expect(blobs.length).toEqual(0);
+    });
+
+    it('given blob name, return readable stream from blob', async () => {
+        // arrange
+        const blobName = 'C123/MSPE/1674687951';
+        // act
+        const stream = await blobStorage.readStreamFromBlob(blobName, containerName);
+        // assert
+        expect(stream).toBeDefined();
+    });
+
+    it('given readable stream, write the stream to blob storage', async () => {
+        // arrange
+        const blobName = 'C123/MSPE/1674687951';
+        const readableStream: NodeJS.ReadableStream  = await blobStorage.readStreamFromBlob(blobName, containerName);
+        const tags: Record<string, string> = {
+            aamcApplicationId: "20240001",
+            seasonId: "season-2024",
+            caseId: "C123",
+        };
+
+        const metadata: Record<string, string> = {
+            files: "1",
+        };
+
+        // act
+        const result = await blobStorage.writeStreamToBlob('test.pdf', containerName, readableStream as internal.Readable, 'application/pdf', tags, metadata);
+        // assert
+        expect(result.clientRequestId).toBeDefined();
+        expect(result.errorCode).toBeUndefined();
     });
 });

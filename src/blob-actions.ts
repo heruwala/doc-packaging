@@ -5,8 +5,10 @@ export interface FileInfo {
     name: string;
     url: string;
     size?: number;
-    type?: string;
+    contentType?: string;
+    lastModified?: Date;
     tags?: Record<string, string>;
+    metadata?: Record<string, string>;
 }
 
 export class BlobActions {
@@ -26,11 +28,16 @@ export class BlobActions {
 
         let blobList: FileInfo[] = [];
         for await (const blob of blobServiceClient.findBlobsByTags(tagQuery)) {
+            const blobProperties = await blobServiceClient.getContainerClient(blob.containerName).getBlobClient(blob.name).getProperties();
+            const blobTags = await blobServiceClient.getContainerClient(blob.containerName).getBlobClient(blob.name).getTags();
             blobList.push({
                 //contentLength and contentType are not available in the findBlobsByTagsResponse https://learn.microsoft.com/en-us/rest/api/storageservices/find-blobs-by-tags
                 name: blob.name,
                 url: `https://${this.accountName}.blob.core.windows.net/${blob.containerName}/${blob.name}`,
-                tags: blob.tags,
+                tags: blobTags.tags,
+                metadata: blobProperties.metadata,
+                contentType: blobProperties.contentType,
+                lastModified: blobProperties.lastModified,
             });
         }
         return blobList;
@@ -53,17 +60,17 @@ export class BlobActions {
                 name: blob.name,
                 url: `https://${this.accountName}.blob.core.windows.net/${containerName}/${blob.name}`,
                 size: blob.properties.contentLength,
-                type: blob.properties.contentType,
+                contentType: blob.properties.contentType,
                 tags: blob.tags,
             });
         }
         return blobList;
     };
 
-    public writeStreamToBlob = async (blobName: string, container: string, stream: internal.Readable, contentType: string = 'application/octet-stream') => {
+    public writeStreamToBlob = async (blobName: string, container: string, stream: internal.Readable, contentType: string = 'application/octet-stream', tags?: Record<string, string>, metadata?: Record<string, string>) => {
         const blobUrl = 'https://' + this.accountName + '.blob.core.windows.net/' + container + '/' + blobName;
         const blobClient = new BlockBlobClient(blobUrl, this.sharedKeyCredential);
-        return blobClient.uploadStream(stream, undefined, undefined, { blobHTTPHeaders: { blobContentType: contentType } });
+        return blobClient.uploadStream(stream, undefined, undefined, { blobHTTPHeaders: { blobContentType: contentType }, tags: tags, metadata: metadata });
     };
 
     public readStreamFromBlob = async (blobName: string, container: string, offset?: number, count?: number): Promise<BlobDownloadResponseParsed> => {

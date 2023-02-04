@@ -23,8 +23,25 @@ export class BlobStorage implements IBlobStorage {
      * @param tagQuery The tag query to filter the blobs
      * query syntax: https://docs.microsoft.com/en-us/rest/api/storageservices/find-blobs-by-tags#query-syntax
      * */
-    public findBlobsByTags(tagQuery: string): Promise<FileInfo[]> {
-        return new BlobActions(this.accountName, this.accountKey).findBlobsByTags(tagQuery);
+    public async findBlobsByTags(tagQuery: string): Promise<BlobData[]> {
+        const files = await new BlobActions(this.accountName, this.accountKey).findBlobsByTags(tagQuery);
+        let blobData: BlobData[] = [];
+        if (files.length > 0) {
+            blobData = files.map((file) => {
+                return {
+                    caseId: file.tags!.caseId,
+                    contentType: file.contentType,
+                    createdAt: new Date(file.tags!.createdDate),
+                    documentId: file.name,
+                    documentName: file.metadata!.document_name,
+                    documentType: <DocumentType>file.tags!.documentType,
+                    lastModifiedAt: new Date(file.lastModified!),
+                    transmissionStatus: file.tags!.transmissionStatus,
+                    uploadedByType: file.tags!.uploadedByType,
+                };
+            });
+        }
+        return blobData;
     }
 
     /**
@@ -37,50 +54,14 @@ export class BlobStorage implements IBlobStorage {
         return new BlobActions(this.accountName, this.accountKey).listBlobs(containerName, prefix);
     }
 
-    public async writeStreamToBlob(blobName: string, containerName: string, stream: internal.Readable, contentType: string): Promise<BlobUploadCommonResponse> {
-        return new BlobActions(this.accountName, this.accountKey).writeStreamToBlob(blobName, containerName, stream, contentType);
+    public async writeStreamToBlob(blobName: string, containerName: string, stream: internal.Readable, contentType: string, tags?: Record<string, string>, metadata?: Record<string, string>): Promise<BlobUploadCommonResponse> {
+        return new BlobActions(this.accountName, this.accountKey).writeStreamToBlob(blobName, containerName, stream, contentType, tags, metadata);
     }
 
     public async readStreamFromBlob(blobName: string, containerName: string): Promise<NodeJS.ReadableStream> {
         const something = await new BlobActions(this.accountName, this.accountKey).readStreamFromBlob(blobName, containerName);
         return something.readableStreamBody!;
     }
-}
-
-// for given caseId get the list of files from blob storage
-async function getBlobList(caseId: string): Promise<BlobData[]> {
-    const blobStorageConnection = 'BLOB_CONNECTION_STRING';
-    const containerName = process.env['BLOB_CONTAINER_NAME'] || '';
-    const connectionString = process.env[blobStorageConnection];
-
-    // check if connectionString is defined in environment variables else throw error
-    if (!connectionString) {
-        throw new Error(`Unknown storage account, ${blobStorageConnection} is not defined in environment variables`);
-    }
-
-    // get list of files from blob storage filtered by caseId, transmissionStatus, and createdDate (less than current date)
-    let blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-    let containerClient = blobServiceClient.getContainerClient(containerName);
-    const currentDateTime = new Date();
-    let blobList: BlobData[] = [];
-    for await (const blob of containerClient.findBlobsByTags("caseId='" + caseId + "' and transmissionStatus='pending' and createdDate<'" + currentDateTime.toISOString() + "'")) {
-        const blobProperties = await containerClient.getBlobClient(blob.name).getProperties();
-        const blobTags = await containerClient.getBlobClient(blob.name).getTags();
-
-        blobList.push({
-            documentType: <DocumentType>blobTags.tags['documentType'],
-            documentName: blobProperties.metadata?.document_name,
-            caseId: blobTags.tags['caseId'],
-            documentId: blob.name,
-            contentType: blobProperties.contentType,
-            createdAt: new Date(blobTags.tags['createdDate']),
-            lastModifiedAt: new Date(blobProperties.lastModified!),
-            transmissionStatus: blobTags.tags['transmissionStatus'],
-            uploadedByType: blobTags.tags['uploadedByType'],
-        });
-    }
-
-    return blobList;
 }
 
 // download blob files from azure blob storage based on input fileNames parameter and return a list of streams
@@ -168,4 +149,4 @@ async function uploadBlobFile(file: Buffer, fileName: string, contentType: strin
     return true;
 }
 
-export default { getBlobList, downloadBlobFiles, uploadBlobFile };
+export default { downloadBlobFiles, uploadBlobFile };

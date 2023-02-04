@@ -1,11 +1,11 @@
 import * as xml2js from 'xml2js';
 
-function createManifestFile(zipFileName: string, zipFileCreateDateTime: Date, applicationId: string, seasonId: string, blobDocuments: BlobData[]): Buffer {
+function createManifestFile(zipFileName: string, zipFileCreateDateTime: Date, aamcApplicationId: string, seasonId: string, blobDocuments: BlobData[]): Buffer {
     const manifestHeader = {
         ZipFileName: zipFileName,
         ZipFileCreateDateTime: zipFileCreateDateTime.toISOString(),
         SourceOrganization: 'EFDO',
-        ApplicationId: applicationId,
+        ApplicationId: aamcApplicationId,
         SeasonId: seasonId,
     };
 
@@ -44,11 +44,11 @@ class ManifestClass implements Manifest {
         this.Documents = documents;
     }
 
-    addHeader(zipFileName: string, zipFileCreateDateTime: Date, applicationId: string, seasonId: string) {
+    addHeader(zipFileName: string, zipFileCreateDateTime: Date, aamcApplicationId: string, seasonId: string) {
         this.ZipFileName = zipFileName;
         this.ZipFileCreateDateTime = zipFileCreateDateTime.toISOString();
         this.SourceOrganization = 'EFDO';
-        this.ApplicationId = applicationId;
+        this.ApplicationId = aamcApplicationId;
         this.SeasonId = seasonId;
     }
 

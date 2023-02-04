@@ -4,7 +4,7 @@ describe('manifest', () => {
     it('should create a manifest file', () => {
         const zipFileName = '21147862_EFDO_2022-05-19T14_02_48.zip';
         const zipFileCreateDateTime = new Date();
-        const applicationId = '2023463931';
+        const aamcApplicationId = '2023463931';
         const seasonId = '2023';
         const documents = [
             {
@@ -40,7 +40,7 @@ describe('manifest', () => {
         ] as BlobData[];
 
         const regexMatchString = `<?xml version="1.0" encoding="UTF-8"`;
-        const manifestFile = manifest.createManifestFile(zipFileName, zipFileCreateDateTime, applicationId, seasonId, documents);
+        const manifestFile = manifest.createManifestFile(zipFileName, zipFileCreateDateTime, aamcApplicationId, seasonId, documents);
         expect(manifestFile).toBeDefined();
         expect(manifestFile.toString()).toMatch(new RegExp(regexMatchString, 'g'));
     });

@@ -4,7 +4,7 @@ export function getCases(currentTime: Date, lastRuntime: Date): CaseData[] {
     let cases: CaseData[] = [
         {
             caseId: 'C123',
-            applicationId: '2023463931',
+            aamcApplicationId: '2023463931',
             seasonId: '2023',
             lastUploadDate: new Date('2023-01-24T18:29:12.621Z'),
             transcriptTransError: false,
@@ -12,7 +12,7 @@ export function getCases(currentTime: Date, lastRuntime: Date): CaseData[] {
         },
         {
             caseId: 'C456',
-            applicationId: '2023463932',
+            aamcApplicationId: '2023463932',
             seasonId: '2023',
             lastUploadDate: new Date('2023-01-24T18:30:12.621Z'),
             transcriptTransError: false,

@@ -1,6 +1,6 @@
 interface CaseData {
     seasonId: string;
-    applicationId: string;
+    aamcApplicationId: string;
     caseId: string;
     lastUploadDate: Date;
     transcriptTransError: boolean;
