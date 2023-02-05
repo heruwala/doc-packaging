@@ -4,9 +4,10 @@ import internal from 'stream';
 import { BlobActions, FileInfo } from './blob-actions';
 
 export interface IBlobStorage {
-    findBlobsByTags(tagQuery: string): Promise<BlobData[]>
+    findBlobsByTags(tagQuery: string): Promise<BlobData[]>;
     writeStreamToBlob(blobName: string, containerName: string, stream: internal.Readable, contentType: string): Promise<BlobUploadCommonResponse>;
     readStreamFromBlob(blobName: string, containerName: string): Promise<NodeJS.ReadableStream>;
+    updateBlob(blobName: string, containerName: string, currentRunTime: Date): Promise<boolean>;
 }
 
 export class BlobStorage implements IBlobStorage {
@@ -44,13 +45,37 @@ export class BlobStorage implements IBlobStorage {
         return blobData;
     }
 
-    public async writeStreamToBlob(blobName: string, containerName: string, stream: internal.Readable, contentType: string, tags?: Record<string, string>, metadata?: Record<string, string>): Promise<BlobUploadCommonResponse> {
+    public async writeStreamToBlob(
+        blobName: string,
+        containerName: string,
+        stream: internal.Readable,
+        contentType: string,
+        tags?: Record<string, string>,
+        metadata?: Record<string, string>
+    ): Promise<BlobUploadCommonResponse> {
         return new BlobActions(this.accountName, this.accountKey).writeStreamToBlob(blobName, containerName, stream, contentType, tags, metadata);
     }
 
     public async readStreamFromBlob(blobName: string, containerName: string): Promise<NodeJS.ReadableStream> {
         const something = await new BlobActions(this.accountName, this.accountKey).readStreamFromBlob(blobName, containerName);
         return something.readableStreamBody!;
+    }
+
+    public async updateBlob(blobName: string, containerName: string, currentRunTime: Date): Promise<boolean> {
+        // find blob by blobName and update blob tags and metadata
+        const blobInfo = await new BlobActions(this.accountName, this.accountKey).getBlobInfo(blobName, containerName);
+
+        if (!blobInfo) {
+            throw new Error(`Unable to find blob, ${blobName} in container, ${containerName}`);
+        }
+
+        const updatedTags = updateRecord(blobInfo.tags!, "transmissionStatus", "transmitted");
+        const updatedMetadata = updateRecord(blobInfo.metadata!, "transmission_date", currentRunTime.toISOString());
+
+        const blobTagResult = await new BlobActions(this.accountName, this.accountKey).updateBlobTags(blobName, containerName, updatedTags);
+        const blobMetadataResult = await new BlobActions(this.accountName, this.accountKey).updateBlobMetadata(blobName, containerName, updatedMetadata);
+        
+        return blobTagResult._response.status === 204 && blobMetadataResult._response.status === 200;
     }
 }
 
@@ -108,5 +133,12 @@ async function streamToBuffer(readableStream: any) {
         readableStream.on('error', reject);
     });
 }
+
+const updateRecord = (record: Record<string, string>, key: string, value: string): Record<string, string> => {
+    return {
+      ...record,
+      [key]: value
+    };
+  };
 
 export default { downloadBlobFiles };

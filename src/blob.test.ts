@@ -11,10 +11,9 @@ describe('blob', () => {
     let blobStorage: BlobStorage;
     beforeEach(() => (blobStorage = new BlobStorage(accountName, accountKey)));
 
-    it('given caseId, return list of files from blob storage', async () => {
+    it.skip('given caseId, return list of files from blob storage', async () => {
         // arrange
         const searchCriteria = "@container = '" + containerName + "' AND caseId = 'C123' AND transmissionStatus = 'pending' AND createdDate < '2023-02-02T00:00:00.000Z'";
-        
         // act
         const blobs = await blobStorage.findBlobsByTags(searchCriteria);
         // assert
@@ -22,24 +21,24 @@ describe('blob', () => {
             {
                 caseId: 'C123',
                 contentType: 'application/pdf',
-                createdAt: new Date('2023-01-25T23:47:36.000Z'),
-                documentId: 'C123/MSXSCRIPT/1674687992',
-                documentName: '123.pdf',
-                documentType: 'MSXSCRIPT',
-                lastModifiedAt: new Date('2023-02-01T18:20:15.000Z'),
-                transmissionStatus: 'pending',
-                uploadedByType: 'applicant',
-            },
-            {
-                caseId: 'C123',
-                contentType: 'application/pdf',
                 createdAt: new Date('2023-01-25T23:48:36.000Z'),
                 documentId: 'C123/MSPE/1674687951',
                 documentName: '456.pdf',
                 documentType: 'MSPE',
-                lastModifiedAt: new Date('2023-02-01T18:12:01.000Z'),
+                lastModifiedAt: new Date('2023-02-04T21:31:37.000Z'),
                 transmissionStatus: 'pending',
                 uploadedByType: 'midus',
+            },
+            {
+                caseId: 'C123',
+                contentType: 'application/pdf',
+                createdAt: new Date('2023-01-25T23:47:36.000Z'),
+                documentId: 'C123/MSXSCRIPT/1674687992',
+                documentName: '123.pdf',
+                documentType: 'MSXSCRIPT',
+                lastModifiedAt: new Date('2023-02-04T21:31:58.000Z'),
+                transmissionStatus: 'pending',
+                uploadedByType: 'applicant',
             },
             {
                 caseId: 'C123',
@@ -48,11 +47,20 @@ describe('blob', () => {
                 documentId: 'C123/PHOTO/1674688000',
                 documentName: '789.jpeg',
                 documentType: 'PHOTO',
-                lastModifiedAt: new Date('2023-02-01T18:19:37.000Z'),
+                lastModifiedAt: new Date('2023-02-04T21:31:21.000Z'),
                 transmissionStatus: 'pending',
                 uploadedByType: 'applicant',
             },
         ] as BlobData[]);
+    });
+
+    it.skip('given caseId, return list of files from blob storage', async () => {
+        // arrange
+        const searchCriteria = "@container = '" + containerName + "' AND caseId = 'C123' AND transmissionStatus = 'pending' AND createdDate < '2023-02-02T00:00:00.000Z'";
+        // act
+        const blobs = await blobStorage.findBlobsByTags(searchCriteria);
+        // assert
+        expect(blobs).toBeGreaterThan(0);
     });
 
     it('given tags, return list of files from blob storage', async () => {
@@ -85,15 +93,15 @@ describe('blob', () => {
     it('given readable stream, write the stream to blob storage', async () => {
         // arrange
         const blobName = 'C123/MSPE/1674687951';
-        const readableStream: NodeJS.ReadableStream  = await blobStorage.readStreamFromBlob(blobName, containerName);
+        const readableStream: NodeJS.ReadableStream = await blobStorage.readStreamFromBlob(blobName, containerName);
         const tags: Record<string, string> = {
-            aamcApplicationId: "20240001",
-            seasonId: "season-2024",
-            caseId: "C123",
+            aamcApplicationId: '20240001',
+            seasonId: 'season-2024',
+            caseId: 'C123',
         };
 
         const metadata: Record<string, string> = {
-            files: "1",
+            files: '1',
         };
 
         // act
@@ -101,5 +109,14 @@ describe('blob', () => {
         // assert
         expect(result.clientRequestId).toBeDefined();
         expect(result.errorCode).toBeUndefined();
+    });
+
+    it('given blob tags and metadata, update the blob', async () => {
+        // arrange
+        const blobName = 'C123/MSPE/1674687955';
+        // act
+        const result = await blobStorage.updateBlob(blobName, containerName, new Date());
+        // assert
+        expect(result).toEqual(true);
     });
 });

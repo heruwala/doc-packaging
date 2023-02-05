@@ -81,12 +81,15 @@ export async function documentPackage() {
                     };
 
                     const zipFileReadableStream = bufferToReadable(zipFile);
-
-                    const blobUploadResponse = await blobStorage.writeStreamToBlob(zipFileName, containerName, zipFileReadableStream, 'application/zip', tags, metadata);
+                    const blobLocation = `${caseId}/aamc-transfer-packages/${zipFileName}`;
+                    const blobUploadResponse = await blobStorage.writeStreamToBlob(blobLocation, containerName, zipFileReadableStream, 'application/zip', tags, metadata);
 
                     // create a message to send to the queue
-                    // send message to the queue
-                    // update the blob storage with TransmissionStatus of "Transmitted"
+                    // send message to the queue and get transmission date time
+                    // update the blob storage with TransmissionStatus of "Transmitted" and TransmissionDate of current time
+                    //for (let document of blobDocuments) {
+                    //    await blobStorage.updateBlob(document.documentId, containerName, transmissionDateTime);
+                    //}
                     // setLastRuntime(currentTime);
                 }
             } catch (error) {

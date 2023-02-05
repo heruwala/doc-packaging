@@ -43,6 +43,21 @@ export class BlobActions {
         return blobList;
     };
 
+    public getBlobInfo = async (blobName: string, container: string): Promise<FileInfo> => {
+        const blobServiceClient = new BlobServiceClient(`https://${this.accountName}.blob.core.windows.net/`, this.sharedKeyCredential);
+
+        const blobProperties = await blobServiceClient.getContainerClient(container).getBlobClient(blobName).getProperties();
+        const blobTags = await blobServiceClient.getContainerClient(container).getBlobClient(blobName).getTags();
+        return {
+            name: blobName,
+            url: `https://${this.accountName}.blob.core.windows.net/${container}/${blobName}`,
+            tags: blobTags.tags,
+            metadata: blobProperties.metadata,
+            contentType: blobProperties.contentType,
+            lastModified: blobProperties.lastModified,
+        };
+    };
+
     public listBlobs = async (containerName: string, prefix?: string): Promise<FileInfo[]> => {
         const blobServiceClient = new BlobServiceClient(`https://${this.accountName}.blob.core.windows.net/`, this.sharedKeyCredential);
         const containerClient = blobServiceClient.getContainerClient(containerName);
@@ -77,5 +92,17 @@ export class BlobActions {
         const blobUrl = 'https://' + this.accountName + '.blob.core.windows.net/' + container + '/' + blobName;
         const blobClient = new BlockBlobClient(blobUrl, this.sharedKeyCredential);
         return blobClient.download(0);
+    };
+
+    public updateBlobTags = async (blobName: string, container: string, tags: Record<string, string>) => {
+        const blobUrl = 'https://' + this.accountName + '.blob.core.windows.net/' + container + '/' + blobName;
+        const blobClient = new BlockBlobClient(blobUrl, this.sharedKeyCredential);
+        return blobClient.setTags(tags);
+    };
+
+    public updateBlobMetadata = async (blobName: string, container: string, metadata: Record<string, string>) => {
+        const blobUrl = 'https://' + this.accountName + '.blob.core.windows.net/' + container + '/' + blobName;
+        const blobClient = new BlockBlobClient(blobUrl, this.sharedKeyCredential);
+        return blobClient.setMetadata(metadata);
     };
 }
