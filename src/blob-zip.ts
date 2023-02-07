@@ -2,6 +2,10 @@ import archiver from 'archiver';
 import internal, { Readable } from 'stream';
 import { BlobStorage } from './blob';
 import { PDFDocument } from 'pdf-lib';
+import fs from 'fs';
+import path from 'path';
+import { annotatePdfDocuments1 } from './annotate';
+import manifest from './manifest';
 
 export class BlobZip {
     private readonly blobStorage: BlobStorage;
@@ -9,7 +13,7 @@ export class BlobZip {
         this.blobStorage = blobStorage;
     }
 
-    public async zipBlobs(containerName: string, blobs: any[], zipName: string): Promise<void> {
+    public async zipBlobs(containerName: string, blobs: BlobData[], zipName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             var isComplete = false;
             const archive = archiver('zip', {
@@ -37,19 +41,29 @@ export class BlobZip {
 
             archive.pipe(output);
 
-            Promise.all(
+            // TODO: Generate Manifest
+            const zipCreationDateTime = new Date();
+            const aamcApplicationId = '1234567890'
+            const zipFileName = `${aamcApplicationId}_${zipCreationDateTime.toISOString().slice(0, -5).replace(/:/g, '')}.zip`;
+            const seasonId = '2024';
+
+            const manifestFile = manifest.createManifestFile(zipFileName, zipCreationDateTime, aamcApplicationId, seasonId, blobs);
+
+            Promise.all(                
                 blobs.map((blob) => {
                     return this.blobStorage
                         .readStreamFromBlob(blob.documentId, containerName)
                         .then(async (documentStream) => {
-                            // Merge PDFs
-                            const readable = this.blobStorage.readStreamFromBlob('Cover.pdf', containerName);
-                            const coverStream = internal.Readable.from(await readable);
-
-                            return coverStream;
+                            if (blob.uploadedByType === 'midus') {
+                                let coverPageStream: internal.Readable = fs.createReadStream(path.resolve(__dirname, './annotate/cover.pdf'));
+                                const mergedStream = await annotatePdfDocuments1(coverPageStream, documentStream as internal.Readable);
+                                return mergedStream;                            
+                            } else {
+                                return documentStream as internal.Readable;
+                            }
                         })
                         .then((blobStream) => {
-                            archive.append(blobStream , { name: blob.documentName });
+                            archive.append(blobStream , { name: blob.documentName! });
                         })
                         .catch((err) => {
                             console.log(err);
@@ -57,6 +71,7 @@ export class BlobZip {
                 })
             )
                 .then(() => {
+                    archive.append(manifestFile, { name: 'manifest.json' });
                     archive.finalize();
                 })
                 .catch((err) => {

@@ -1,6 +1,5 @@
 import { BlobStorage } from './blob';
 import { BlobZip } from './blob-zip';
-import internal from 'stream';
 
 describe('When using blob-zip', () => {
     let blobStorage: BlobStorage;
@@ -15,14 +14,39 @@ describe('When using blob-zip', () => {
     test('zipping blobs should succeed', async () => {
         // arrange
         const containerName = 'season-2024';
-        const blobs = [
+        const blobs: BlobData[] = [
             {
-                documentName: '456.pdf',
+                caseId: 'C123',
+                contentType: 'application/pdf',
+                createdAt: new Date('2023-01-25T23:48:36.000Z'),
                 documentId: 'C123/MSPE/1674687951',
+                documentName: '456.pdf',
+                documentType: 'MSPE',
+                lastModifiedAt: new Date('2023-02-04T21:31:37.000Z'),
+                transmissionStatus: 'pending',
+                uploadedByType: 'midus',
             },
             {
-                documentName: '123.pdf',
+                caseId: 'C123',
+                contentType: 'application/pdf',
+                createdAt: new Date('2023-01-25T23:47:36.000Z'),
                 documentId: 'C123/MSXSCRIPT/1674687992',
+                documentName: '123.pdf',
+                documentType: 'MSXSCRIPT',
+                lastModifiedAt: new Date('2023-02-04T21:31:58.000Z'),
+                transmissionStatus: 'pending',
+                uploadedByType: 'applicant',
+            },
+            {
+                caseId: 'C123',
+                contentType: 'image/jpeg',
+                createdAt: new Date('2023-01-25T23:49:36.000Z'),
+                documentId: 'C123/PHOTO/1674688000',
+                documentName: '789.jpeg',
+                documentType: 'PHOTO',
+                lastModifiedAt: new Date('2023-02-04T21:31:21.000Z'),
+                transmissionStatus: 'pending',
+                uploadedByType: 'applicant',
             },
         ];
 
