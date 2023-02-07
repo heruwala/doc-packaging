@@ -19,6 +19,7 @@ import manifest from './manifest';
 import { promises as fs } from 'fs';
 import { zipFiles } from './zip';
 import { Readable } from "stream";
+import { BlobZip } from './blob-zip';
 
 export async function documentPackage() {
     let success = false;
@@ -33,8 +34,7 @@ export async function documentPackage() {
             const aamcApplicationId = caseItem.aamcApplicationId;
             const seasonId = caseItem.seasonId;
             const caseId = caseItem.caseId;
-            const miducCoverPage = await fs.readFile('./annotations/MIDUS Cover.pdf');
-            let manifestFile: Buffer;
+
             const blobStorage: BlobStorage = new BlobStorage(accountName, accountKey);
             try {
                 const searchCriteria =
@@ -43,46 +43,11 @@ export async function documentPackage() {
                     "' AND transmissionStatus = 'pending' AND createdDate < '" + currentRunTime.toISOString() + "'";
                     const blobList = await blobStorage.findBlobsByTags(searchCriteria);
                 if (blobList.length > 0) {
-                    const blobDocuments = await blobUtils.downloadBlobFiles(blobList);
                     const zipCreationDateTime = new Date();
                     const zipFileName = `${aamcApplicationId}_${zipCreationDateTime.toISOString().slice(0, -5).replace(/:/g, '')}.zip`;
-                    manifestFile = manifest.createManifestFile(zipFileName, zipCreationDateTime, aamcApplicationId, seasonId, blobDocuments);
-                    for (let document of blobDocuments) {
-                        if (document.contentType === 'application/pdf' && document.uploadedByType === 'midus') {
-                            const annotatedPdfBuffer = await annotatePdfDocuments([miducCoverPage, document.documentContent]);
-                            document.documentContent = annotatedPdfBuffer;
-                        }
-                    }
 
-                    const documentsToZip = blobDocuments.map((blobDocument) => {
-                        return {
-                            documentName: blobDocument.documentName,
-                            documentContent: blobDocument.documentContent,
-                        };
-                    });
-                    documentsToZip.push({
-                        documentName: 'manifest.xml',
-                        documentContent: manifestFile,
-                    });
-                    const zipFile = await zipFiles(documentsToZip);
-
-                    // for verification purpose, write zip file to disk
-                    //const zipFilePath = `./test/fixtures/${zipFileName}`;
-                    //await fs.writeFile(zipFilePath, zipFile);
-
-                    const tags: Record<string, string> = {
-                        aamcApplicationId: aamcApplicationId,
-                        seasonId: seasonId,
-                        caseId: caseItem.caseId,
-                    };
-
-                    const metadata: Record<string, string> = {
-                        files: JSON.stringify(blobDocuments.map((blobDocument) => blobDocument.documentId)),
-                    };
-
-                    const zipFileReadableStream = bufferToReadable(zipFile);
-                    const blobLocation = `${caseId}/aamc-transfer-packages/${zipFileName}`;
-                    const blobUploadResponse = await blobStorage.writeStreamToBlob(blobLocation, containerName, zipFileReadableStream, 'application/zip', tags, metadata);
+                    const blobZip: BlobZip = new BlobZip(blobStorage);
+                    await blobZip.zipBlobs(containerName, blobList, zipFileName, zipCreationDateTime, aamcApplicationId, seasonId, caseId);
 
                     // create a message to send to the queue
                     // send message to the queue and get transmission date time

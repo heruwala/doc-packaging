@@ -14,7 +14,7 @@ import { documentPackage } from './index';
 // set the last runtime to the current time
 
 describe('document package', () => {
-    it.skip('given all the methods, return success', async () => {
+    it('given all the methods, return success', async () => {
         expect(await documentPackage()).toBe(true);
     });
 });

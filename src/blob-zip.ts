@@ -13,7 +13,7 @@ export class BlobZip {
         this.blobStorage = blobStorage;
     }
 
-    public async zipBlobs(containerName: string, blobs: BlobData[], zipFileName: string, aamcApplicationId: string, seasonId: string): Promise<void> {
+    public async zipBlobs(containerName: string, blobs: BlobData[], zipFileName: string, zipCreationDateTime: Date, aamcApplicationId: string, seasonId: string, caseId: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             var isComplete = false;
             const archive = archiver('zip', {
@@ -26,8 +26,20 @@ export class BlobZip {
                 writableObjectMode: true,
             });
 
+            const tags: Record<string, string> = {
+                aamcApplicationId: aamcApplicationId,
+                seasonId: seasonId,
+                caseId: caseId,
+            };
+
+            const metadata: Record<string, string> = {
+                files: JSON.stringify(blobs.map((blobDocument) => blobDocument.documentId)),
+            };
+
+            const blobLocation = `${caseId}/aamc-transfer-packages/${zipFileName}`;
+
             this.blobStorage
-                .writeStreamToBlob(zipFileName, containerName, output, 'application/zip')
+                .writeStreamToBlob(blobLocation, containerName, output, 'application/zip', tags, metadata)
                 .then(() => {
                     console.log('writeStreamToBlob completed');
                     isComplete = true;
@@ -42,7 +54,7 @@ export class BlobZip {
             archive.pipe(output);
 
             // TODO: Generate Manifest
-            const zipCreationDateTime = new Date();
+            //const zipCreationDateTime = new Date();
             //const aamcApplicationId = '1234567890'
             //const zipFileName = `${aamcApplicationId}_${zipCreationDateTime.toISOString().slice(0, -5).replace(/:/g, '')}.zip`;
             //const seasonId = '2024';

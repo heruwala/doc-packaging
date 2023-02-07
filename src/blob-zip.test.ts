@@ -50,11 +50,13 @@ describe('When using blob-zip', () => {
             },
         ];
 
+        const caseId = 'C123';
         const zipName = 'abc.zip';
         const aamcApplicationId = '1234567890';
+        const zipCreationDateTime = new Date();
 
         // act
-        await blobZip.zipBlobs(containerName, blobs, zipName, aamcApplicationId, '2024');
+        await blobZip.zipBlobs(containerName, blobs, zipName, zipCreationDateTime, aamcApplicationId, '2024', caseId);
 
         // assert
         expect(true).toBe(true);
