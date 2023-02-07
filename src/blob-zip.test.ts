@@ -50,10 +50,11 @@ describe('When using blob-zip', () => {
             },
         ];
 
-        const zipName = 'ab.zip';
+        const zipName = 'abc.zip';
+        const aamcApplicationId = '1234567890';
 
         // act
-        await blobZip.zipBlobs(containerName, blobs, zipName);
+        await blobZip.zipBlobs(containerName, blobs, zipName, aamcApplicationId, '2024');
 
         // assert
         expect(true).toBe(true);

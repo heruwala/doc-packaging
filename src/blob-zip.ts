@@ -13,7 +13,7 @@ export class BlobZip {
         this.blobStorage = blobStorage;
     }
 
-    public async zipBlobs(containerName: string, blobs: BlobData[], zipName: string): Promise<void> {
+    public async zipBlobs(containerName: string, blobs: BlobData[], zipFileName: string, aamcApplicationId: string, seasonId: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             var isComplete = false;
             const archive = archiver('zip', {
@@ -27,7 +27,7 @@ export class BlobZip {
             });
 
             this.blobStorage
-                .writeStreamToBlob(zipName, containerName, output, 'application/zip')
+                .writeStreamToBlob(zipFileName, containerName, output, 'application/zip')
                 .then(() => {
                     console.log('writeStreamToBlob completed');
                     isComplete = true;
@@ -43,9 +43,9 @@ export class BlobZip {
 
             // TODO: Generate Manifest
             const zipCreationDateTime = new Date();
-            const aamcApplicationId = '1234567890'
-            const zipFileName = `${aamcApplicationId}_${zipCreationDateTime.toISOString().slice(0, -5).replace(/:/g, '')}.zip`;
-            const seasonId = '2024';
+            //const aamcApplicationId = '1234567890'
+            //const zipFileName = `${aamcApplicationId}_${zipCreationDateTime.toISOString().slice(0, -5).replace(/:/g, '')}.zip`;
+            //const seasonId = '2024';
 
             const manifestFile = manifest.createManifestFile(zipFileName, zipCreationDateTime, aamcApplicationId, seasonId, blobs);
 
