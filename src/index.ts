@@ -11,14 +11,9 @@
 // update the blob storage with TransmissionStatus of "Transmitted"
 // set the last runtime to the current time
 
-import { annotatePdfDocuments } from './annotate';
-import blobUtils, { BlobStorage } from './blob';
+import { BlobStorage } from './blob';
 import { getCases } from './case';
 import runtimeUtils from './last-runtime';
-import manifest from './manifest';
-import { promises as fs } from 'fs';
-import { zipFiles } from './zip';
-import { Readable } from "stream";
 import { BlobZip } from './blob-zip';
 
 export async function documentPackage() {
@@ -38,10 +33,14 @@ export async function documentPackage() {
             const blobStorage: BlobStorage = new BlobStorage(accountName, accountKey);
             try {
                 const searchCriteria =
-                    "@container = '" + containerName +
-                    "' AND caseId = '" + caseId +
-                    "' AND transmissionStatus = 'pending' AND createdDate < '" + currentRunTime.toISOString() + "'";
-                    const blobList = await blobStorage.findBlobsByTags(searchCriteria);
+                    "@container = '" +
+                    containerName +
+                    "' AND caseId = '" +
+                    caseId +
+                    "' AND transmissionStatus = 'pending' AND createdDate < '" +
+                    currentRunTime.toISOString() +
+                    "'";
+                const blobList = await blobStorage.findBlobsByTags(searchCriteria);
                 if (blobList.length > 0) {
                     const zipCreationDateTime = new Date();
                     const zipFileName = `${aamcApplicationId}_${zipCreationDateTime.toISOString().slice(0, -5).replace(/:/g, '')}.zip`;
@@ -69,11 +68,3 @@ export async function documentPackage() {
     }
     return success;
 }
-
-// Temporary code, once integrated with the stream, this will be removed
-function bufferToReadable(buffer: Buffer): Readable {
-    const readable = new Readable();
-    readable.push(buffer);
-    readable.push(null);
-    return readable;
-  }
