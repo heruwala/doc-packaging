@@ -41,6 +41,7 @@ describe('manifest', () => {
 
         const regexMatchString = `<?xml version="1.0" encoding="UTF-8"`;
         const manifestFile = manifest.createManifestFile(zipFileName, zipFileCreateDateTime, aamcApplicationId, seasonId, documents);
+        console.log(manifestFile.toString());
         expect(manifestFile).toBeDefined();
         expect(manifestFile.toString()).toMatch(new RegExp(regexMatchString, 'g'));
     });

@@ -65,10 +65,47 @@ class ManifestClass implements Manifest {
     }
 
     generateManifestXml(): string {
+        const namespaceUri = 'http://www.aamc.org/schemas/eras/file-exchange';
+        const namespacePrefix = 'xmlns';
+
+        const manifest = {
+            Manifest: {
+                $: {
+                    [namespacePrefix]: namespaceUri,
+                },
+                ZipFileName: this.ZipFileName,
+                ZipFileCreateDateTime: this.ZipFileCreateDateTime,
+                SourceOrganization: this.SourceOrganization,
+                ApplicationId: this.ApplicationId,
+                SeasonId: this.SeasonId,
+                Documents: {
+                    Document: this.Documents.Document.map((document) => {
+                        return {
+                            DocumentType: document.DocumentType,
+                            DocumentId: document.DocumentId,
+                            FileName: document.FileName,
+                            FileReceivedDateTime: document.FileReceivedDateTime,
+                        };
+                    }),
+                },
+            },
+        };
+
         const builder = new xml2js.Builder({
-            rootName: 'Manifest',
+            xmldec: {
+                version: '1.0',
+                encoding: 'UTF-8',
+                standalone: true,
+            },
+            renderOpts: {
+                pretty: true,
+                indent: '    ',
+                newline: '\n',
+            },
         });
-        const xml = builder.buildObject(this);
+
+        const xml = builder.buildObject(manifest);
+
         return xml;
     }
 
